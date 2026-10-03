@@ -31,7 +31,7 @@ export interface ReviewRecord {
 	lastReviewedOn: string | null;
 	/** 下次回看日期，毕业或暂停时为 null */
 	nextReview: string | null;
-	/** 每次回看的日期，可用于以后做复习热力图 */
+	/** 每次回看的日期，可用于以后做回看热力图 */
 	history: string[];
 	state: ReviewState;
 }
@@ -64,10 +64,6 @@ export function addDays(key: string, days: number): string {
 
 export function daysBetween(from: string, to: string): number {
 	return moment(to, 'YYYY-MM-DD').diff(moment(from, 'YYYY-MM-DD'), 'days');
-}
-
-export function formatDay(key: string): string {
-	return moment(key, 'YYYY-MM-DD').format('MM-DD');
 }
 
 export function basenameOf(path: string): string {
@@ -153,7 +149,7 @@ export async function loadReviewFile(app: App): Promise<LoadResult> {
 	} catch (error) {
 		return {
 			file: createEmptyReviewFile(),
-			warning: `复习进度读取失败：${(error as Error).message}`,
+			warning: `回看进度读取失败：${(error as Error).message}`,
 		};
 	}
 
@@ -425,8 +421,12 @@ export interface ManagedItem {
 	path: string;
 	name: string;
 	record: ReviewRecord;
-	/** 进度文本，例如 2/8 · 下次 10-07 */
-	progress: string;
+	/** 已完成的回看次数 */
+	done: number;
+	/** 计划内的总次数 */
+	total: number;
+	/** 下次回看的日期键，毕业或暂停时为 null */
+	nextReview: string | null;
 }
 
 export interface ManagedGroups {
@@ -446,15 +446,17 @@ export function collectManaged(file: ReviewFile): ManagedGroups {
 		missing: [],
 	};
 
+	// 这里只产出结构化数据，进度文本由面板层格式化 ——
+	// 数据层不碰显示格式，显示的时效性与语言跟随才有地方统一处理
 	for (const [path, record] of Object.entries(file.items)) {
-		const done = record.reviews;
-		const progress = record.nextReview
-			? `${done}/${file.intervals.length} · 下次 ${formatDay(record.nextReview)}`
-			: record.state === 'graduated'
-				? `${done} 次 · 已完成`
-				: `${done} 次`;
-
-		groups[record.state].push({ path, name: basenameOf(path), record, progress });
+		groups[record.state].push({
+			path,
+			name: basenameOf(path),
+			record,
+			done: record.reviews,
+			total: file.intervals.length,
+			nextReview: record.nextReview,
+		});
 	}
 
 	const lists: ManagedItem[][] = [

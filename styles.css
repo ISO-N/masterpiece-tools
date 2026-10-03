@@ -1,271 +1,653 @@
-/* ── 幽灵附件 ───────────────────────────────────────────────── */
+/* ─────────────────────────────────────────────────────────────
+   Masterpiece Tools — 工作台样式
+   ─────────────────────────────────────────────────────────────
 
-.mp-attach-result {
-	margin-top: 9px;
-}
+   约定：
+   1. 颜色一律走 Obsidian 的 CSS 变量，不写死色值，明暗主题自动适配。
+   2. 圆角只有三档（见下面的 token），按「外层容器 > 内层容器 > 小控件」
+      的层级取用，不再每处各挑一个数字。
+   3. 文字只有四档。次级信息曾经全部挤在 --font-ui-smaller 一档，
+      读起来没有主次；现在描述用 body、状态用 meta、页脚用 micro。
+   4. 卡片左侧的状态色轨是唯一承载信息的装饰：绿=成功、红=失败、
+      强调色=运行中。除此之外不做无意义的动效。
+   ───────────────────────────────────────────────────────────── */
 
-.mp-attach-summary {
-	font-size: var(--font-ui-smaller);
-	color: var(--text-muted);
-	line-height: 1.5;
-	word-break: break-word;
-}
+.masterpiece-workbench {
+	--mp-radius-sm: 5px;
+	--mp-radius-md: 8px;
+	--mp-radius-lg: 11px;
 
-.mp-attach-summary.is-clear {
-	color: var(--color-green);
-}
+	--mp-text-title: var(--font-ui-medium);
+	--mp-text-body: var(--font-ui-small);
+	--mp-text-meta: var(--font-ui-smaller);
+	--mp-text-micro: 0.72em;
 
-.mp-attach-count {
-	font-weight: 600;
-	color: var(--text-normal);
-}
+	--mp-rail: 3px;
 
-.mp-attach-skipped {
-	color: var(--text-faint);
-}
-
-.mp-attach-list {
-	margin-top: 8px;
-	max-height: 260px;
+	/* 移动端底部要避开 home indicator */
+	padding: 14px 14px max(24px, calc(24px + env(safe-area-inset-bottom)));
+	overflow-x: hidden;
 	overflow-y: auto;
-	border: 1px solid var(--background-modifier-border);
-	border-radius: 8px;
-	background: var(--background-primary);
 }
 
-.mp-attach-row {
+/* 标题元素复位：裸 h2 / h3 会带上浏览器的默认边距与字号 */
+.masterpiece-workbench h2,
+.masterpiece-workbench h3 {
+	margin: 0;
+	line-height: 1.35;
+}
+
+/* 触屏：去掉 300ms 双击缩放延迟与系统点击高亮，状态反馈交给自己定义 */
+.masterpiece-workbench button,
+.masterpiece-workbench .mp-note-link,
+.masterpiece-workbench .mp-fold-head {
+	touch-action: manipulation;
+	-webkit-tap-highlight-color: transparent;
+}
+
+/* 只给屏幕阅读器的单一活动区域 */
+.mp-sr-only {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	margin: -1px;
+	padding: 0;
+	border: 0;
+	overflow: hidden;
+	white-space: nowrap;
+	clip-path: inset(50%);
+}
+
+/* ── 头部 ───────────────────────────────────────────────────── */
+
+.mp-header {
+	margin-bottom: 14px;
+}
+
+.mp-header-top {
 	display: flex;
 	align-items: center;
 	gap: 8px;
-	padding: 6px 9px;
 }
 
-.mp-attach-row + .mp-attach-row {
-	border-top: 1px solid var(--background-modifier-border);
-}
-
-.mp-attach-size {
-	flex: 0 0 auto;
-	font-size: var(--font-ui-smaller);
-	color: var(--text-faint);
-	font-variant-numeric: tabular-nums;
-}
-
-.mp-attach-note {
-	margin-top: 7px;
-	font-size: var(--font-ui-smaller);
-	color: var(--text-faint);
-	line-height: 1.5;
-}
-
-/* ── 回看提醒 ───────────────────────────────────────────────── */
-
-.mp-review-warning {
-	margin-top: 8px;
-	padding: 6px 8px;
-	border-radius: 7px;
-	font-size: var(--font-ui-smaller);
-	line-height: 1.5;
-	background: var(--background-modifier-error);
+.mp-header-icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 22px;
+	height: 22px;
+	border-radius: var(--mp-radius-sm);
+	background: var(--interactive-accent);
 	color: var(--text-on-accent);
-	word-break: break-word;
 }
 
-.mp-review-warning.is-info {
-	background: var(--background-secondary);
-	color: var(--text-muted);
+.mp-header-icon .svg-icon {
+	width: 14px;
+	height: 14px;
 }
 
-.mp-review-summary {
-	margin-top: 9px;
+.mp-header-title {
+	font-size: 1.05em;
+	font-weight: 700;
+	color: var(--text-normal);
+	letter-spacing: 0.01em;
 }
 
-.mp-review-headline {
-	font-size: var(--font-ui-smaller);
+/* 标题区回答「今天有什么要做」。这是整个侧边栏里最该被先看到的信息。 */
+.mp-header-hero {
+	margin-top: 8px;
+	font-size: var(--mp-text-body);
 	font-weight: 600;
 	line-height: 1.45;
 	color: var(--text-normal);
 }
 
-.mp-review-headline.is-due {
+.mp-header-hero.is-due {
 	color: var(--text-accent);
 }
 
-.mp-review-headline.is-clear {
+.mp-header-hero.is-clear {
 	color: var(--text-muted);
 	font-weight: 400;
 }
 
-.mp-review-counts {
-	margin-top: 3px;
-	font-size: var(--font-ui-smaller);
-	color: var(--text-faint);
-	line-height: 1.45;
+.mp-header-hero.is-error {
+	color: var(--text-error);
+	font-weight: 400;
 }
 
-/* 待回看列表 */
-.mp-review-due:not(:empty) {
-	margin-top: 9px;
+/* ── 搜索栏 ─────────────────────────────────────────────────── */
+
+/*
+ * 图标 / 输入框 / 清空按钮都是 flex 项，不用绝对定位。
+ * 这样无论 Obsidian 给 input 加什么内边距，都不可能发生重叠。
+ */
+.mp-search {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	margin-bottom: 12px;
+	padding: 0 8px;
+	border-radius: var(--mp-radius-md);
+	background: var(--background-secondary);
 	border: 1px solid var(--background-modifier-border);
-	border-radius: 8px;
-	background: var(--background-primary);
+	color: var(--text-muted);
 }
 
-.mp-review-row {
+/*
+ * 输入框自身没有焦点轮廓，所以这里必须给出一个明确的替代：
+ * 只换边框颜色不够醒目，加一圈整环，对比度明显高于静止态。
+ */
+.mp-search:focus-within {
+	border-color: var(--interactive-accent);
+	outline: 2px solid var(--interactive-accent);
+	outline-offset: 1px;
+}
+
+.mp-search-icon {
+	flex: 0 0 auto;
+	display: flex;
+	pointer-events: none;
+}
+
+.mp-search-icon .svg-icon {
+	width: 14px;
+	height: 14px;
+}
+
+/* 输入框去掉边框与底色，外观完全由外层容器承担。
+   选择器写到两段是为了压过 Obsidian 对 input[type='search'] 的默认样式。 */
+.mp-search .mp-search-input,
+.mp-search .mp-search-input:focus,
+.mp-search .mp-search-input:active {
+	flex: 1 1 auto;
+	min-width: 0;
+	padding: 7px 0;
+	background: transparent;
+	background-color: transparent;
+	border: none;
+	box-shadow: none;
+	outline: none;
+	font-size: var(--mp-text-body);
+}
+
+/* 关掉 WebKit 自带的清除按钮，避免和自己的清空按钮重影 */
+.mp-search .mp-search-input::-webkit-search-cancel-button {
+	-webkit-appearance: none;
+	appearance: none;
+}
+
+.mp-search-input::placeholder {
+	color: var(--text-faint);
+}
+
+.mp-search-clear {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex: 0 0 auto;
+	width: 18px;
+	height: 18px;
+	padding: 0;
+	border: none;
+	background: transparent;
+	box-shadow: none;
+	color: var(--text-faint);
+	cursor: pointer;
+	border-radius: var(--mp-radius-sm);
+}
+
+.mp-search-clear:hover {
+	color: var(--text-normal);
+	background: transparent;
+}
+
+.mp-search-clear:focus-visible {
+	outline: 2px solid var(--interactive-accent);
+	outline-offset: 1px;
+}
+
+.mp-search-clear .svg-icon {
+	width: 13px;
+	height: 13px;
+}
+
+.mp-search-clear.is-hidden {
+	display: none;
+}
+
+.mp-empty {
+	padding: 14px 4px;
+	text-align: center;
+	font-size: var(--mp-text-meta);
+	color: var(--text-faint);
+	line-height: 1.6;
+}
+
+/* ── 卡片 ───────────────────────────────────────────────────── */
+
+.mp-cards {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+/*
+ * 卡片基座。两种形态：
+ * - 一键式卡片是原生 <button>，横向布局（见下面的 button.mp-card）
+ * - 带表单的卡片是 div，纵向布局，标题用 h3
+ */
+.masterpiece-workbench .mp-card {
+	display: flex;
+	flex-direction: column;
+	position: relative;
+	width: 100%;
+	height: auto;
+	margin: 0;
+	padding: 12px 13px;
+	border-radius: var(--mp-radius-lg);
+	background: var(--background-secondary);
+	border: 1px solid var(--background-modifier-border);
+	box-shadow: none;
+	font-family: inherit;
+	font-size: inherit;
+	color: var(--text-normal);
+	text-align: left;
+	white-space: normal;
+	overflow: hidden;
+	transition:
+		border-color 0.14s ease,
+		background-color 0.14s ease;
+}
+
+.masterpiece-workbench button.mp-card {
+	flex-direction: row;
+	align-items: flex-start;
+	gap: 12px;
+	cursor: pointer;
+}
+
+.masterpiece-workbench button.mp-card:hover {
+	border-color: var(--interactive-accent);
+	background: var(--background-modifier-hover);
+}
+
+.masterpiece-workbench button.mp-card:focus-visible {
+	outline: 2px solid var(--interactive-accent);
+	outline-offset: 2px;
+}
+
+/* 带表单的卡片整卡不可点，不给悬停反馈 */
+.mp-card.is-form {
+	cursor: default;
+}
+
+/*
+ * 状态色轨：把「上次跑成没跑成」编码成结构，而不是写成一行文字。
+ * 用绝对定位而不是 border-left，避免左右边框宽度不一致把内容挤偏。
+ */
+.mp-card::before {
+	content: '';
+	position: absolute;
+	inset: 0 auto 0 0;
+	width: var(--mp-rail);
+	background: transparent;
+}
+
+/* 没跑过的默认态：色轨透明。显式写出来，让四种状态在样式表里是齐的 */
+.mp-card.is-idle::before {
+	background: transparent;
+}
+
+.mp-card.is-ok::before {
+	background: var(--color-green);
+}
+
+.mp-card.is-error::before {
+	background: var(--color-red);
+}
+
+.mp-card.is-running::before {
+	background: var(--interactive-accent);
+}
+
+/* 运行中：拦截再次触发，重复执行会留下真后果 */
+.mp-card.is-running {
+	pointer-events: none;
+	border-color: var(--interactive-accent);
+}
+
+.mp-card.is-disabled,
+.masterpiece-workbench button.mp-card:disabled {
+	cursor: default;
+	background: transparent;
+	border-style: dashed;
+	opacity: 0.75;
+}
+
+.masterpiece-workbench button.mp-card:disabled:hover {
+	background: transparent;
+	border-color: var(--background-modifier-border);
+}
+
+.mp-card-head {
+	display: flex;
+	align-items: flex-start;
+	gap: 12px;
+}
+
+.mp-card-icon {
+	flex: 0 0 auto;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 32px;
+	height: 32px;
+	border-radius: var(--mp-radius-md);
+	background: var(--background-modifier-hover);
+	color: var(--text-accent);
+}
+
+.mp-card-icon .svg-icon {
+	width: 17px;
+	height: 17px;
+}
+
+.masterpiece-workbench button.mp-card:hover .mp-card-icon {
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
+}
+
+/* 带表单的卡片整卡不可点，图标不跟着悬停变色 */
+.mp-card.is-form:hover .mp-card-icon,
+.masterpiece-workbench button.mp-card:disabled:hover .mp-card-icon {
+	background: var(--background-modifier-hover);
+	color: var(--text-accent);
+}
+
+.mp-card.is-disabled .mp-card-icon,
+.masterpiece-workbench button.mp-card:disabled .mp-card-icon {
+	background: transparent;
+	color: var(--text-faint);
+}
+
+.mp-card.is-running .mp-card-icon {
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
+}
+
+.mp-card.is-running .mp-card-icon .svg-icon {
+	animation: mp-spin 0.9s linear infinite;
+}
+
+@keyframes mp-spin {
+	from {
+		transform: rotate(0deg);
+	}
+
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+.mp-card-main {
+	display: block;
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
+.mp-card-title {
+	display: block;
+	font-size: var(--mp-text-title);
+	font-weight: 600;
+	color: var(--text-normal);
+}
+
+.mp-card-desc {
+	display: block;
+	margin-top: 3px;
+	font-size: var(--mp-text-body);
+	color: var(--text-muted);
+	line-height: 1.5;
+}
+
+/* 状态行：时间与结果分成两块，靠排版间距分层，不用「·」串成一行 */
+.mp-card-status {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 0 7px;
+	margin-top: 6px;
+	font-size: var(--mp-text-meta);
+	color: var(--text-muted);
+	line-height: 1.4;
+}
+
+.mp-card-status.is-blank {
+	display: none;
+}
+
+.mp-card-status.is-muted {
+	color: var(--text-faint);
+}
+
+.mp-card-time {
+	flex: 0 0 auto;
+	color: var(--text-faint);
+	font-variant-numeric: tabular-nums;
+}
+
+.mp-card-message {
+	min-width: 0;
+	word-break: break-word;
+}
+
+.mp-card-status.is-ok .mp-card-message {
+	color: var(--color-green);
+}
+
+.mp-card-status.is-error .mp-card-message {
+	color: var(--color-red);
+}
+
+/*
+ * 动作提示：只在悬停 / 聚焦时出现。
+ * 替代原来每张卡片右下角都挂一个的箭头图标 —— 那个箭头不说明会发生什么，
+ * 而这两个字至少说了「点了会运行」。
+ */
+.mp-card-cue {
+	flex: 0 0 auto;
+	align-self: center;
+	font-size: var(--mp-text-micro);
+	color: var(--text-faint);
+	opacity: 0;
+	transition: opacity 0.12s ease;
+}
+
+.masterpiece-workbench button.mp-card:hover .mp-card-cue,
+.masterpiece-workbench button.mp-card:focus-visible .mp-card-cue {
+	opacity: 1;
+}
+
+/* 触屏没有悬停，直接常显 */
+@media (hover: none) {
+	.mp-card-cue {
+		opacity: 1;
+	}
+}
+
+.mp-card-body {
+	margin-top: 10px;
+}
+
+/* ── 通用行 / 计数 / 列表 ───────────────────────────────────── */
+
+.mp-row {
 	display: flex;
 	align-items: center;
 	gap: 8px;
 	padding: 7px 9px;
 }
 
-.mp-review-row + .mp-review-row {
+.mp-row + .mp-row {
 	border-top: 1px solid var(--background-modifier-border);
 }
 
-.mp-review-row-main,
-.mp-review-result-main {
+/* 紧凑行给 9px 左右内边距：外层列表是 overflow:hidden，
+   内边距为 0 的话笔记名的焦点轮廓会被裁掉 */
+.mp-row.is-compact {
+	padding: 5px 9px;
+}
+
+.mp-row-main {
 	flex: 1 1 auto;
 	min-width: 0;
 }
 
-.mp-review-row-name {
-	font-size: var(--font-ui-smaller);
-	font-weight: 500;
-	color: var(--text-normal);
-	line-height: 1.4;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
-	cursor: pointer;
-}
-
-.mp-review-row-name:hover {
-	color: var(--text-accent);
-	text-decoration: underline;
-}
-
-.mp-review-row-meta {
+/* 行内的次级信息：进度、日期、数量。用 flex 间距分组，不用圆点串 */
+.mp-row-meta {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 0 8px;
 	margin-top: 2px;
-	font-size: var(--font-ui-smaller);
+	font-size: var(--mp-text-meta);
 	color: var(--text-faint);
 	line-height: 1.4;
+	font-variant-numeric: tabular-nums;
 }
 
-.mp-review-row-actions {
+.mp-row-actions {
 	flex: 0 0 auto;
 	display: flex;
 	align-items: center;
 	gap: 5px;
 }
 
-.mp-btn-sm {
-	font-size: var(--font-ui-smaller);
-	padding: 2px 9px;
-	height: auto;
-	line-height: 1.6;
-	white-space: nowrap;
-}
-
-/* 添加区 */
-.mp-review-add {
-	margin-top: 11px;
-	padding-top: 10px;
-	border-top: 1px solid var(--background-modifier-border);
-}
-
-.mp-review .mp-review-search {
-	width: 100%;
-	font-size: var(--font-ui-smaller);
-	padding: 5px 8px;
-	height: auto;
-	border-radius: 7px;
-}
-
-.mp-review .mp-review-search::-webkit-search-cancel-button {
-	-webkit-appearance: none;
-	appearance: none;
-}
-
-.mp-review-add-actions {
-	margin-top: 6px;
-}
-
-.mp-review-results {
-	margin-top: 7px;
-}
-
-.mp-review-results:not(:empty) {
-	border: 1px solid var(--background-modifier-border);
-	border-radius: 8px;
-	background: var(--background-primary);
-	max-height: 190px;
-	overflow-y: auto;
-}
-
-.mp-review-result {
-	display: flex;
-	align-items: center;
-	gap: 8px;
-	padding: 6px 9px;
-}
-
-.mp-review-result + .mp-review-result {
-	border-top: 1px solid var(--background-modifier-border);
-}
-
-.mp-review-result-name {
-	font-size: var(--font-ui-smaller);
+/* 纯文本的笔记名（不可点，例如失联的笔记与搜索结果） */
+.mp-row-name {
+	display: block;
+	max-width: 100%;
+	font-size: var(--mp-text-meta);
+	font-weight: 500;
+	line-height: 1.4;
 	color: var(--text-normal);
-	line-height: 1.4;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
 }
 
-.mp-review-result-path {
-	margin-top: 1px;
-	font-size: var(--font-ui-smaller);
-	color: var(--text-faint);
+.mp-row-name.is-static {
+	cursor: default;
+}
+
+/*
+ * 可点击的笔记名。用 <button> 保证键盘可达，
+ * 这里负责把它复位成「看起来像链接」的样子。
+ */
+.mp-note-link {
+	display: block;
+	max-width: 100%;
+	height: auto;
+	margin: 0;
+	padding: 0;
+	border: none;
+	background: transparent;
+	box-shadow: none;
+	font-family: inherit;
+	font-size: var(--mp-text-meta);
+	font-weight: 500;
 	line-height: 1.4;
+	text-align: left;
+	color: var(--text-normal);
+	cursor: pointer;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
 }
 
-.mp-review-added {
-	flex: 0 0 auto;
-	font-size: var(--font-ui-smaller);
+.mp-note-link:hover {
+	color: var(--text-accent);
+	text-decoration: underline;
+	background: transparent;
+}
+
+.mp-note-link:focus-visible {
+	outline: 2px solid var(--interactive-accent);
+	outline-offset: 2px;
+	border-radius: var(--mp-radius-sm);
+}
+
+/* 计数标签：数字在前、标签在后，靠间距分组 */
+.mp-count {
+	display: inline-flex;
+	align-items: baseline;
+	gap: 3px;
+	font-size: var(--mp-text-meta);
+	color: var(--text-muted);
+}
+
+.mp-count-value {
+	font-weight: 600;
+	color: var(--text-normal);
+	font-variant-numeric: tabular-nums;
+}
+
+.mp-count-label {
 	color: var(--text-faint);
 }
 
-.mp-review-empty {
-	padding: 10px;
-	text-align: center;
-	font-size: var(--font-ui-smaller);
-	color: var(--text-faint);
+.mp-count.is-warn .mp-count-value {
+	color: var(--text-warning);
 }
 
-/* 管理区折叠面板 */
-.mp-review-manage {
-	margin-top: 11px;
+.mp-list:not(:empty) {
+	border: 1px solid var(--background-modifier-border);
+	border-radius: var(--mp-radius-md);
+	background: var(--background-primary);
+	overflow: hidden;
 }
+
+/* ── 折叠面板 ───────────────────────────────────────────────── */
 
 .mp-fold-head {
 	display: flex;
 	align-items: center;
 	gap: 4px;
-	font-size: var(--font-ui-smaller);
+	width: 100%;
+	height: auto;
+	margin: 0;
+	padding: 4px 0;
+	border: none;
+	background: transparent;
+	box-shadow: none;
+	font-family: inherit;
+	font-size: var(--mp-text-meta);
+	font-weight: 500;
+	line-height: 1.4;
 	color: var(--text-muted);
+	text-align: left;
 	cursor: pointer;
-	padding: 3px 0;
 }
 
 .mp-fold-head:hover {
 	color: var(--text-normal);
+	background: transparent;
+}
+
+.mp-fold-head:focus-visible {
+	outline: 2px solid var(--interactive-accent);
+	outline-offset: 2px;
+	border-radius: var(--mp-radius-sm);
 }
 
 .mp-fold-icon {
 	display: flex;
+}
+
+/* 展开的分组标题保持高亮，收起时回到次级色 */
+.mp-fold.is-open .mp-fold-head {
+	color: var(--text-normal);
 }
 
 .mp-fold-icon .svg-icon {
@@ -281,142 +663,211 @@
 	display: none;
 }
 
-.mp-review-group + .mp-review-group {
-	margin-top: 9px;
+/* ── 回看提醒 ───────────────────────────────────────────────── */
+
+.mp-review-notice {
+	margin-top: 8px;
+	padding: 7px 9px;
+	border-radius: var(--mp-radius-md);
+	font-size: var(--mp-text-meta);
+	line-height: 1.5;
+	word-break: break-word;
+	background: var(--background-modifier-error);
+	color: var(--text-on-accent);
 }
 
-.mp-review-group-title {
-	font-size: var(--font-ui-smaller);
-	color: var(--text-faint);
-	margin-bottom: 4px;
-}
-
-.mp-review-manage-row {
-	display: flex;
-	align-items: center;
-	gap: 8px;
-	padding: 5px 0;
-}
-
-.mp-review-manage-row + .mp-review-manage-row {
-	border-top: 1px solid var(--background-modifier-border);
-}
-
-/* ── 搜索栏 ─────────────────────────────────────────────────── */
-
-/*
- * 搜索栏：图标 / 输入框 / 清空按钮都是 flex 项，不用绝对定位。
- * 这样无论 Obsidian 自身给 input 加什么内边距，都不可能发生重叠。
- */
-.mp-search {
-	display: flex;
-	align-items: center;
-	gap: 6px;
-	margin-bottom: 12px;
-	padding: 0 8px;
-	border-radius: 9px;
+.mp-review-notice.is-info {
 	background: var(--background-secondary);
-	border: 1px solid var(--background-modifier-border);
 	color: var(--text-muted);
 }
 
-.mp-search:focus-within {
-	border-color: var(--interactive-accent);
+.mp-review-notice.is-hidden {
+	display: none;
 }
 
-.mp-search-icon {
-	flex: 0 0 auto;
+.mp-review-summary {
+	margin-top: 4px;
+}
+
+.mp-summary-note {
+	font-size: var(--mp-text-meta);
+	color: var(--text-muted);
+	line-height: 1.55;
+}
+
+.mp-summary-note.is-clear {
+	color: var(--text-faint);
+}
+
+.mp-review-counts {
 	display: flex;
-	pointer-events: none;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 2px 12px;
 }
 
-.mp-search-icon .svg-icon {
-	width: 14px;
-	height: 14px;
+.mp-review-due:not(:empty) {
+	margin-top: 12px;
 }
 
-/* 输入框自身去掉边框与底色，外观完全由外层容器承担。
-   选择器写到两段是为了压过 Obsidian 对 input[type='search'] 的默认样式。 */
-.mp-search .mp-search-input,
-.mp-search .mp-search-input:focus,
-.mp-search .mp-search-input:active {
-	flex: 1 1 auto;
-	min-width: 0;
-	padding: 7px 0;
-	background: transparent;
-	background-color: transparent;
-	border: none;
-	box-shadow: none;
-	outline: none;
-	font-size: var(--font-ui-small);
+.mp-section-label {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 0 10px;
+	margin-bottom: 5px;
+	font-size: var(--mp-text-meta);
+	font-weight: 600;
+	color: var(--text-muted);
 }
 
-/* 关掉 WebKit 自带的清除按钮，避免和自己的清空按钮重影 */
-.mp-search .mp-search-input::-webkit-search-cancel-button {
+/* 到期状态单独上色：整行里唯一需要立刻判断的信息 */
+.mp-due-tag {
+	flex: 0 0 auto;
+	font-weight: 600;
+	color: var(--text-accent);
+}
+
+.mp-due-tag.is-overdue {
+	color: var(--text-warning);
+}
+
+.mp-row-hint {
+	flex: 0 0 auto;
+	color: var(--text-faint);
+}
+
+.mp-review-add {
+	margin-top: 12px;
+	padding-top: 10px;
+	border-top: 1px solid var(--background-modifier-border);
+}
+
+.mp-review .mp-review-search {
+	width: 100%;
+	height: auto;
+	padding: 5px 8px;
+	border-radius: var(--mp-radius-md);
+	font-size: var(--mp-text-meta);
+	background-color: var(--background-primary);
+	color: var(--text-normal);
+}
+
+.mp-review .mp-review-search::-webkit-search-cancel-button {
 	-webkit-appearance: none;
 	appearance: none;
 }
 
-.mp-search-input::placeholder {
-	color: var(--text-faint);
+.mp-review-search:focus-visible {
+	outline: 2px solid var(--interactive-accent);
+	outline-offset: 1px;
 }
 
-.mp-search-clear {
-	flex: 0 0 auto;
+.mp-review-add-actions {
+	margin-top: 6px;
+}
+
+.mp-review-results {
+	margin-top: 7px;
+}
+
+.mp-review-results:not(:empty) {
+	border: 1px solid var(--background-modifier-border);
+	border-radius: var(--mp-radius-md);
+	background: var(--background-primary);
+	max-height: 190px;
+	overflow-x: hidden;
+	overflow-y: auto;
+	/* 滚到底不要把外层侧边栏一起带着滚 */
+	overscroll-behavior: contain;
+}
+
+.mp-review-result {
 	display: flex;
-	cursor: pointer;
-	border-radius: 4px;
-	transition: color 0.12s ease;
+	align-items: center;
+	gap: 8px;
+	padding: 6px 9px;
 }
 
-.mp-search-clear:hover {
-	color: var(--text-normal);
+.mp-review-result + .mp-review-result {
+	border-top: 1px solid var(--background-modifier-border);
 }
 
-.mp-search-clear .svg-icon {
-	width: 13px;
-	height: 13px;
-}
-
-.mp-search-clear.is-hidden {
-	display: none;
-}
-
-.mp-empty {
-	padding: 18px 4px;
-	text-align: center;
-	font-size: var(--font-ui-smaller);
+.mp-review-added {
+	flex: 0 0 auto;
+	font-size: var(--mp-text-meta);
 	color: var(--text-faint);
-	line-height: 1.6;
 }
 
-/* ── 卡片内的表单 ───────────────────────────────────────────── */
+.mp-review-empty {
+	padding: 10px;
+	text-align: center;
+	font-size: var(--mp-text-meta);
+	color: var(--text-faint);
+}
 
-.mp-card-body {
+.mp-review-manage {
+	margin-top: 12px;
+}
+
+.mp-group + .mp-group {
 	margin-top: 9px;
 }
 
-/* 自定义卡片不在整卡上挂点击行为 */
-.mp-card.is-custom:hover .mp-card-action {
-	color: var(--text-faint);
-	transform: none;
+.mp-group-title {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 0 8px;
+	margin-bottom: 3px;
+	font-size: var(--mp-text-meta);
+	font-weight: 500;
+	color: var(--text-muted);
 }
+
+/* ── 通用小按钮 ─────────────────────────────────────────────── */
+
+.mp-btn-sm {
+	height: auto;
+	padding: 2px 9px;
+	font-size: var(--mp-text-meta);
+	line-height: 1.6;
+	white-space: nowrap;
+}
+
+/* ── 快速捕获 ───────────────────────────────────────────────── */
 
 .mp-capture-input {
 	width: 100%;
 	min-height: 58px;
-	resize: vertical;
 	padding: 7px 9px;
-	border-radius: 8px;
+	border-radius: var(--mp-radius-md);
 	font-family: inherit;
-	font-size: var(--font-ui-small);
+	font-size: var(--mp-text-body);
 	line-height: 1.5;
-	background: var(--background-primary);
+	background-color: var(--background-primary);
 	border: 1px solid var(--background-modifier-border);
+	color: var(--text-normal);
+	resize: vertical;
 }
 
-.mp-capture-input:focus {
+.mp-capture-input:focus-visible {
 	border-color: var(--interactive-accent);
+	outline: 2px solid var(--interactive-accent);
+	outline-offset: 1px;
+}
+
+.mp-capture-error {
+	margin-top: 6px;
+	font-size: var(--mp-text-meta);
+	line-height: 1.45;
+	color: var(--text-error);
+	word-break: break-word;
+}
+
+.mp-capture-error:empty,
+.mp-capture-error.is-hidden {
+	display: none;
 }
 
 .mp-capture-row {
@@ -426,20 +877,25 @@
 	margin-top: 7px;
 }
 
+/* 显式给出底色与字色：Windows 深色模式下原生 select 容易白底白字 */
 .mp-capture-target {
 	flex: 1 1 auto;
 	min-width: 0;
-	font-size: var(--font-ui-smaller);
-	padding: 4px 6px;
 	height: auto;
+	padding: 4px 6px;
+	font-size: var(--mp-text-meta);
+	background-color: var(--background-primary);
+	color: var(--text-normal);
 }
 
 .mp-capture-submit {
 	flex: 0 0 auto;
-	font-size: var(--font-ui-smaller);
-	padding: 4px 12px;
 	height: auto;
+	padding: 4px 12px;
+	font-size: var(--mp-text-meta);
 }
+
+/* ── 面板通用 ───────────────────────────────────────────────── */
 
 .mp-panel-toolbar {
 	display: flex;
@@ -448,14 +904,18 @@
 }
 
 .mp-panel-toolbar button {
-	font-size: var(--font-ui-smaller);
-	padding: 4px 12px;
 	height: auto;
+	padding: 4px 12px;
+	font-size: var(--mp-text-meta);
 }
 
 .mp-panel-summary {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 2px 12px;
 	margin-top: 8px;
-	font-size: var(--font-ui-smaller);
+	font-size: var(--mp-text-meta);
 	color: var(--text-muted);
 	line-height: 1.5;
 }
@@ -464,18 +924,21 @@
 	color: var(--text-faint);
 }
 
-/* 改名预览 */
+/* ── 章节改名预览 ───────────────────────────────────────────── */
+
 .mp-preview {
-	max-height: 190px;
+	margin-top: 8px;
+	max-height: 200px;
+	overflow-x: hidden;
 	overflow-y: auto;
-	margin-top: 7px;
+	overscroll-behavior: contain;
 }
 
 .mp-preview:not(:empty) {
-	border: 1px solid var(--background-modifier-border);
-	border-radius: 8px;
-	background: var(--background-primary);
 	padding: 6px 8px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: var(--mp-radius-md);
+	background: var(--background-primary);
 }
 
 .mp-preview-item {
@@ -483,18 +946,19 @@
 	align-items: baseline;
 	gap: 6px;
 	padding: 3px 0;
-	font-size: var(--font-ui-smaller);
+	font-size: var(--mp-text-meta);
 	line-height: 1.45;
+	font-variant-numeric: tabular-nums;
 }
 
 .mp-preview-from {
 	flex: 0 1 auto;
 	min-width: 0;
+	color: var(--text-muted);
+	text-decoration: line-through;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
-	color: var(--text-muted);
-	text-decoration: line-through;
 }
 
 .mp-preview-arrow {
@@ -502,249 +966,111 @@
 	color: var(--text-faint);
 }
 
+.mp-preview-arrow.is-skip {
+	color: var(--text-warning);
+}
+
 .mp-preview-to {
 	flex: 0 0 auto;
-	color: var(--text-normal);
 	font-weight: 500;
+	color: var(--text-normal);
 }
 
 .mp-preview-item.is-conflict .mp-preview-to {
-	color: var(--text-warning);
 	font-weight: 400;
+	color: var(--text-warning);
 }
 
-/* ── 工作台侧边栏 ───────────────────────────────────────────── */
+/* ── 幽灵附件 ───────────────────────────────────────────────── */
 
-.masterpiece-workbench {
-	padding: 14px 14px 24px;
-	overflow-y: auto;
+.mp-attach-result {
+	margin-top: 9px;
 }
 
-/* 头部 */
-.mp-header {
-	margin-bottom: 16px;
-}
-
-.mp-header-title {
+.mp-attach-summary {
 	display: flex;
-	align-items: center;
-	gap: 8px;
-	font-size: 1.15em;
-	font-weight: 700;
-	color: var(--text-normal);
-	letter-spacing: 0.2px;
-}
-
-.mp-header-icon {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	width: 24px;
-	height: 24px;
-	border-radius: 7px;
-	background: var(--interactive-accent);
-	color: var(--text-on-accent);
-}
-
-.mp-header-icon .svg-icon {
-	width: 15px;
-	height: 15px;
-}
-
-.mp-header-sub {
-	margin-top: 6px;
-	font-size: var(--font-ui-smaller);
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 2px 12px;
+	font-size: var(--mp-text-meta);
 	color: var(--text-muted);
-}
-
-/* 卡片列表 */
-.mp-cards {
-	display: flex;
-	flex-direction: column;
-	gap: 10px;
-}
-
-.mp-card {
-	position: relative;
-	display: flex;
-	align-items: flex-start;
-	gap: 12px;
-	padding: 13px 14px;
-	border-radius: 12px;
-	background: var(--background-secondary);
-	border: 1px solid var(--background-modifier-border);
-	cursor: pointer;
-	transition:
-		transform 0.14s ease,
-		box-shadow 0.14s ease,
-		border-color 0.14s ease,
-		background-color 0.14s ease;
-}
-
-.mp-card:hover {
-	transform: translateY(-1px);
-	border-color: var(--interactive-accent);
-	box-shadow: 0 6px 16px var(--background-modifier-box-shadow);
-}
-
-.mp-card:focus-visible {
-	outline: 2px solid var(--interactive-accent);
-	outline-offset: 2px;
-}
-
-.mp-card:active {
-	transform: translateY(0);
-}
-
-/* 卡片图标 */
-.mp-card-icon {
-	flex: 0 0 auto;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	width: 34px;
-	height: 34px;
-	border-radius: 10px;
-	background: var(--background-modifier-hover);
-	color: var(--text-accent);
-	transition:
-		background-color 0.14s ease,
-		color 0.14s ease;
-}
-
-.mp-card:hover .mp-card-icon {
-	background: var(--interactive-accent);
-	color: var(--text-on-accent);
-}
-
-.mp-card-icon .svg-icon {
-	width: 18px;
-	height: 18px;
-}
-
-/* 卡片正文 */
-.mp-card-main {
-	flex: 1 1 auto;
-	min-width: 0;
-}
-
-.mp-card-title {
-	font-size: var(--font-ui-medium);
-	font-weight: 600;
-	color: var(--text-normal);
-	line-height: 1.35;
-}
-
-.mp-card-desc {
-	margin-top: 3px;
-	font-size: var(--font-ui-smaller);
-	color: var(--text-muted);
-	line-height: 1.45;
-}
-
-.mp-card-status {
-	margin-top: 7px;
-	font-size: var(--font-ui-smaller);
-	color: var(--text-muted);
-	line-height: 1.4;
+	line-height: 1.5;
 	word-break: break-word;
 }
 
-.mp-card-status.is-ok {
+.mp-attach-summary.is-clear {
 	color: var(--color-green);
 }
 
-.mp-card-status.is-error {
-	color: var(--color-red);
-}
-
-.mp-card-status.is-muted {
+.mp-attach-skipped {
 	color: var(--text-faint);
 }
 
-/* 右侧箭头 */
-.mp-card-action {
+.mp-attach-list {
+	margin-top: 8px;
+	max-height: 260px;
+	overflow-x: hidden;
+	overflow-y: auto;
+	overscroll-behavior: contain;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: var(--mp-radius-md);
+	background: var(--background-primary);
+}
+
+.mp-attach-size {
 	flex: 0 0 auto;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	width: 22px;
-	height: 22px;
-	margin-top: 4px;
+	font-size: var(--mp-text-meta);
 	color: var(--text-faint);
-	transition:
-		color 0.14s ease,
-		transform 0.14s ease;
+	font-variant-numeric: tabular-nums;
 }
 
-.mp-card:hover .mp-card-action {
-	color: var(--interactive-accent);
-	transform: translate(1px, -1px);
-}
-
-.mp-card-action .svg-icon {
-	width: 15px;
-	height: 15px;
-}
-
-/* 运行中 */
-.mp-card.is-running {
-	pointer-events: none;
-	border-color: var(--interactive-accent);
-}
-
-.mp-card.is-running .mp-card-icon {
-	background: var(--interactive-accent);
-	color: var(--text-on-accent);
-}
-
-.mp-card.is-running .mp-card-action .svg-icon {
-	animation: mp-spin 1s linear infinite;
-}
-
-@keyframes mp-spin {
-	from {
-		transform: rotate(0deg);
-	}
-	to {
-		transform: rotate(360deg);
-	}
-}
-
-/* 未开放的功能 */
-.mp-card.is-disabled {
-	cursor: default;
-	background: transparent;
-	border-style: dashed;
-	border-color: var(--background-modifier-border);
-	opacity: 0.75;
-}
-
-.mp-card.is-disabled:hover {
-	transform: none;
-	box-shadow: none;
-	border-color: var(--background-modifier-border);
-}
-
-.mp-card.is-disabled:hover .mp-card-icon {
-	background: var(--background-modifier-hover);
+.mp-attach-note {
+	margin-top: 7px;
+	font-size: var(--mp-text-meta);
 	color: var(--text-faint);
+	line-height: 1.5;
 }
 
-.mp-card.is-disabled:hover .mp-card-action {
-	color: var(--text-faint);
-	transform: none;
-}
+/* ── 页脚 ───────────────────────────────────────────────────── */
 
-.mp-card.is-disabled .mp-card-icon {
-	background: transparent;
-	color: var(--text-faint);
-}
-
-/* 底部版本号 */
 .mp-footer {
 	margin-top: 20px;
 	text-align: center;
-	font-size: var(--font-ui-smaller);
+	font-size: var(--mp-text-micro);
 	color: var(--text-faint);
+}
+
+/* ── 工作台之外的零散样式 ───────────────────────────────────── */
+
+/* 确认弹窗的正文。它在 .modal 里，取不到上面的 token，所以用全局变量。 */
+.mp-confirm-text {
+	margin: 0 0 4px;
+	font-size: var(--font-ui-small);
+	line-height: 1.55;
+	color: var(--text-normal);
+}
+
+/* 设置页里的纯说明段落（替代没有控件的孤儿设置项） */
+.mp-settings-note {
+	margin: 0 0 18px;
+	font-size: var(--font-ui-smaller);
+	line-height: 1.55;
+	color: var(--text-muted);
+}
+
+/* ── 动效降级 ───────────────────────────────────────────────── */
+
+/*
+ * 系统开了「减少动态效果」时，转圈与过渡都要停下来。
+ * 运行状态不会因此丢失：色轨变强调色、状态行写「运行中…」都还在。
+ */
+@media (prefers-reduced-motion: reduce) {
+	.masterpiece-workbench *,
+	.masterpiece-workbench *::before,
+	.masterpiece-workbench *::after {
+		transition-duration: 0.01ms !important;
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		scroll-behavior: auto !important;
+	}
 }

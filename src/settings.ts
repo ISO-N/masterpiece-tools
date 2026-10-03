@@ -43,10 +43,21 @@ export const DEFAULT_SETTINGS: MasterpieceSettings = {
 	captureTimestamp: true,
 	excludePatterns: '',
 	includeAttachments: false,
-	folderEmoji: true,
+	// 默认关闭：每行文件夹都挂同一个 📁 不承载任何信息，
+	// 想让文件夹在视觉上更跳，再自己打开
+	folderEmoji: false,
 	openAfterUpdate: true,
 	lastRuns: {},
 };
+
+/** 给输入框补上自动填充属性。都是非登录字段，关掉避免密码管理器弹候选 */
+function markInput(
+	el: HTMLInputElement | HTMLTextAreaElement,
+	name: string,
+): void {
+	el.setAttribute('name', name);
+	el.setAttribute('autocomplete', 'off');
+}
 
 export class MasterpieceSettingTab extends PluginSettingTab {
 	plugin: MasterpieceToolsPlugin;
@@ -65,30 +76,32 @@ export class MasterpieceSettingTab extends PluginSettingTab {
 		new Setting(containerEl)
 			.setName('输出路径')
 			.setDesc('相对仓库根目录，例如 README.md 或 索引/README.md')
-			.addText((text) =>
-				text
+			.addText((text) => {
+				markInput(text.inputEl, 'mp-readme-path');
+				return text
 					.setPlaceholder('README.md')
 					.setValue(this.plugin.settings.readmePath)
 					.onChange(async (value) => {
 						this.plugin.settings.readmePath =
 							value.trim() || DEFAULT_SETTINGS.readmePath;
 						await this.plugin.saveSettings();
-					}),
-			);
+					});
+			});
 
 		new Setting(containerEl)
 			.setName('索引标题')
 			.setDesc('生成文档的一级标题')
-			.addText((text) =>
-				text
+			.addText((text) => {
+				markInput(text.inputEl, 'mp-readme-title');
+				return text
 					.setPlaceholder('仓库索引')
 					.setValue(this.plugin.settings.readmeTitle)
 					.onChange(async (value) => {
 						this.plugin.settings.readmeTitle =
 							value.trim() || DEFAULT_SETTINGS.readmeTitle;
 						await this.plugin.saveSettings();
-					}),
-			);
+					});
+			});
 
 		new Setting(containerEl)
 			.setName('排除的文件夹')
@@ -97,7 +110,8 @@ export class MasterpieceSettingTab extends PluginSettingTab {
 			)
 			.addTextArea((area) => {
 				area.inputEl.rows = 5;
-				area
+				markInput(area.inputEl, 'mp-exclude-patterns');
+				return area
 					.setPlaceholder('模板\n附件/临时')
 					.setValue(this.plugin.settings.excludePatterns)
 					.onChange(async (value) => {
@@ -120,7 +134,7 @@ export class MasterpieceSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName('文件夹图标')
-			.setDesc('在文件夹名称前加一个 📁')
+			.setDesc('在文件夹名称前加一个 📁。图标不承载额外信息，只是让文件夹在视觉上更跳')
 			.addToggle((toggle) =>
 				toggle
 					.setValue(this.plugin.settings.folderEmoji)
@@ -143,10 +157,10 @@ export class MasterpieceSettingTab extends PluginSettingTab {
 			);
 
 		new Setting(containerEl)
-			.setName('立即生成')
+			.setName('立即重建')
 			.setDesc('跳过工作台，直接按当前设置重建索引')
 			.addButton((button) =>
-				button.setButtonText('生成').onClick(() => {
+				button.setButtonText('重建索引').onClick(() => {
 					// 走统一入口，保证结果同样被记录到工作台卡片上
 					void this.plugin.runCardById('update-vault-readme');
 				}),
@@ -159,28 +173,30 @@ export class MasterpieceSettingTab extends PluginSettingTab {
 			.setDesc(
 				'每个文件夹里生成的索引笔记名，不含扩展名。默认 _MOC，下划线开头会排在文件夹最前面',
 			)
-			.addText((text) =>
-				text
+			.addText((text) => {
+				markInput(text.inputEl, 'mp-moc-filename');
+				return text
 					.setPlaceholder(DEFAULT_MOC_FILENAME)
 					.setValue(this.plugin.settings.mocFilename)
 					.onChange(async (value) => {
 						this.plugin.settings.mocFilename =
 							value.trim() || DEFAULT_MOC_FILENAME;
 						await this.plugin.saveSettings();
-					}),
-			);
+					});
+			});
 
-		new Setting(containerEl)
-			.setName('手动区与自动区')
-			.setDesc(
-				'生成的 MOC 用 <!-- mp:auto:... --> 与 <!-- mp:manual --> 注释切分为三块：标题和链接列表由插件重写，中间的手动区永不改动。标记不完整的文件会被跳过，不会覆盖你的内容。',
-			);
+		// 这里原来是一个只有名称和说明、没有任何控件的 Setting ——
+		// 那种"孤儿设置项"会渲染出一个空的控件槽，看起来像加载失败。改成纯说明段落。
+		containerEl.createEl('p', {
+			cls: 'mp-settings-note',
+			text: '生成的 MOC 用注释切成三块：标题和链接列表由插件重写，中间的手动区永不改动。标记不完整的文件会被跳过，不会覆盖你的内容。',
+		});
 
 		new Setting(containerEl)
 			.setName('立即生成 MOC')
 			.setDesc('为仓库内每个文件夹生成或更新索引笔记')
 			.addButton((button) =>
-				button.setButtonText('生成').onClick(() => {
+				button.setButtonText('生成 MOC').onClick(() => {
 					void this.plugin.runCardById('build-moc');
 				}),
 			);
@@ -189,21 +205,24 @@ export class MasterpieceSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName('收集箱路径')
-			.setDesc('快速捕获默认写入的笔记，不存在时自动创建。例如 收集箱.md 或 inbox/收集箱.md')
-			.addText((text) =>
-				text
+			.setDesc(
+				'快速捕获默认写入的笔记，不存在时自动创建。例如 收集箱.md 或 inbox/收集箱.md',
+			)
+			.addText((text) => {
+				markInput(text.inputEl, 'mp-inbox-path');
+				return text
 					.setPlaceholder('收集箱.md')
 					.setValue(this.plugin.settings.inboxPath)
 					.onChange(async (value) => {
 						this.plugin.settings.inboxPath =
 							value.trim() || DEFAULT_SETTINGS.inboxPath;
 						await this.plugin.saveSettings();
-					}),
-			);
+					});
+			});
 
 		new Setting(containerEl)
 			.setName('加时间戳')
-			.setDesc('每条捕获内容前加上 HH:mm，方便回溯是哪个时间段记下的')
+			.setDesc('每条捕获内容前加上时间，方便回溯是哪个时间段记下的')
 			.addToggle((toggle) =>
 				toggle
 					.setValue(this.plugin.settings.captureTimestamp)
@@ -212,5 +231,32 @@ export class MasterpieceSettingTab extends PluginSettingTab {
 						await this.plugin.saveSettings();
 					}),
 			);
+
+		this.linkControlLabels();
+	}
+
+	/**
+	 * Obsidian 的 Setting 把名称渲染成 div，不会和控件建立 label 关联 ——
+	 * 屏幕阅读器读输入框时听不到它叫什么。
+	 *
+	 * 这里统一补一次：给名称元素一个 id，让控件反过来指向它。
+	 * 用 aria-labelledby 而不是 aria-label，是为了让无障碍名称就用界面上
+	 * 看得见的那几个字，改文案时不会两边走偏。
+	 * 只处理输入类控件：按钮的无障碍名称应该是按钮自己的文字。
+	 */
+	private linkControlLabels(): void {
+		const controls = this.containerEl.querySelectorAll<HTMLElement>(
+			'.setting-item input, .setting-item textarea, .setting-item select',
+		);
+
+		controls.forEach((control, index) => {
+			const item = control.closest('.setting-item');
+			const nameEl = item?.querySelector<HTMLElement>('.setting-item-name');
+			if (!nameEl) return;
+
+			const nameId = `mp-setting-label-${index}`;
+			nameEl.setAttribute('id', nameId);
+			control.setAttribute('aria-labelledby', nameId);
+		});
 	}
 }

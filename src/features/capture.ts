@@ -1,5 +1,6 @@
-import { App, TFile, moment, normalizePath } from 'obsidian';
+import { App, TFile, normalizePath } from 'obsidian';
 import type { MasterpieceSettings } from '../settings';
+import { formatTimeOfDay } from '../utils/format';
 
 export type CaptureTarget = 'inbox' | 'current';
 
@@ -40,7 +41,7 @@ export async function captureText(
 		.filter((line) => line.length > 0);
 
 	if (lines.length === 0) {
-		return { ok: false, message: '没有内容可捕获', path: null };
+		return { ok: false, message: '没有内容可捕获：至少写一行再试', path: null };
 	}
 
 	let file: TFile | null = null;
@@ -49,7 +50,11 @@ export async function captureText(
 	if (target === 'current') {
 		file = resolveActiveNote(app);
 		if (!file) {
-			return { ok: false, message: '当前没有打开的笔记', path: null };
+			return {
+				ok: false,
+				message: '当前没有打开的笔记：先打开一篇，或把写入位置改成收集箱',
+				path: null,
+			};
 		}
 	} else {
 		const path = resolveInboxPath(settings);
@@ -62,7 +67,8 @@ export async function captureText(
 		}
 	}
 
-	const stamp = settings.captureTimestamp ? `${moment().format('HH:mm')} ` : '';
+	// 时间戳跟随界面语言的时钟习惯（12 小时制 / 24 小时制由 Intl 决定）
+	const stamp = settings.captureTimestamp ? `${formatTimeOfDay(Date.now())} ` : '';
 	const block = lines.map((line) => `- ${stamp}${line}`).join('\n') + '\n';
 
 	const content = await app.vault.read(file);
