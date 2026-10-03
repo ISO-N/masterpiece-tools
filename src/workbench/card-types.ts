@@ -33,7 +33,7 @@ export interface WorkbenchCard {
 	icon: string;
 	/** 是否可用，false 表示开发中 */
 	available: boolean;
-	/** 未运行时展示的小标签 */
+	/** 未运行时展示的小标签。只在「点一下不够、还有第二步」时才有信息量 */
 	badge?: string;
 	/** 参与搜索的额外关键词 */
 	keywords?: string[];

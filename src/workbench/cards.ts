@@ -45,7 +45,6 @@ export const WORKBENCH_CARDS: WorkbenchCard[] = [
 		description: '扫描整个仓库，用「列表 + 双链」的文件树重建根目录索引',
 		icon: 'folder-tree',
 		available: true,
-		badge: '一键运行',
 		keywords: ['readme', '索引', '目录', 'index', '文件树'],
 		async run(plugin: MasterpieceToolsPlugin) {
 			const result = await updateVaultReadme(plugin.app, plugin.settings);
@@ -61,7 +60,6 @@ export const WORKBENCH_CARDS: WorkbenchCard[] = [
 		description: '为每个文件夹生成 _MOC.md 索引笔记，README 里的文件夹链接就指向它',
 		icon: 'list-tree',
 		available: true,
-		badge: '一键运行',
 		keywords: ['moc', '索引', '导航', 'map of content'],
 		async run(plugin: MasterpieceToolsPlugin) {
 			const result = await generateFolderMocs(plugin.app, plugin.settings);

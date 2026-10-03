@@ -7,9 +7,11 @@ import {
 import { WORKBENCH_VIEW_TYPE, WorkbenchView } from './workbench/view';
 import { WORKBENCH_CARDS, type CardRunResult } from './workbench/cards';
 import {
+	collectDue,
 	loadReviewFile,
 	reconcileReview,
 	saveReviewFile,
+	todayKey,
 	type LoadResult,
 	type ReviewFile,
 } from './features/review';
@@ -111,6 +113,21 @@ export default class MasterpieceToolsPlugin extends Plugin {
 		await saveReviewFile(this.app, file);
 	}
 
+	/**
+	 * 今天待回看的篇数。给工作台标题区用。
+	 * 读的是内存缓存，不会重复扫仓库；读取失败时返回 null，
+	 * 由调用方决定怎么表达，不把异常漏给 UI。
+	 */
+	async getDueCount(): Promise<number | null> {
+		try {
+			const { file } = await this.getReviewData();
+			return collectDue(file, todayKey()).length;
+		} catch (error) {
+			console.error('[Masterpiece Tools] 统计待回看失败', error);
+			return null;
+		}
+	}
+
 	/** 改名：把记录从旧路径搬到新路径 */
 	private async followRename(file: TAbstractFile, oldPath: string): Promise<void> {
 		if (!(file instanceof TFile) || file.extension !== 'md') return;
@@ -161,7 +178,7 @@ export default class MasterpieceToolsPlugin extends Plugin {
 
 		const leaf = workspace.getRightLeaf(false);
 		if (!leaf) {
-			new Notice('无法打开工作台：侧边栏不可用');
+			new Notice('无法打开工作台：当前没有可用的右侧边栏，请先展开右侧边栏再试');
 			return;
 		}
 		await leaf.setViewState({ type: WORKBENCH_VIEW_TYPE, active: true });
