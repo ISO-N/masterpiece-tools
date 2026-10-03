@@ -1,92 +1,244 @@
-# Obsidian Sample Plugin
+# Masterpiece Tools
 
-This is a sample plugin for Obsidian (https://obsidian.md).
+Obsidian 仓库工作台：把常用操作收拢成一个侧边栏，每个功能是一张卡片。
 
-This project uses TypeScript to provide type checking and documentation.
-The repo depends on the latest plugin API (obsidian.d.ts) in TypeScript Definition format, which contains TSDoc comments describing what it does.
+## 功能
 
-This sample plugin demonstrates some of the basic functionality the plugin API can do.
+打开方式：点击左侧功能区的仪表盘图标，或使用命令 **打开工作台**。工作台默认停靠在右侧边栏。
 
-- Adds a ribbon icon, which shows a Notice when clicked.
-- Adds a command "Open modal (simple)" which opens a Modal.
-- Adds a plugin setting tab to the settings page.
-- Registers a global click event and outputs a Notice on click.
-- Registers a global interval which logs 'setInterval' to the console.
+顶部有搜索栏，可按名称、说明或关键词过滤卡片。
 
-## First time developing plugins?
+| 卡片 | 状态 | 形态 | 说明 |
+| --- | --- | --- | --- |
+| 回看提醒 | 可用 | 表单 | 按 1·1·2·3·8·15·60·90 天的间隔安排回看，只看不动你的笔记 |
+| 快速捕获 | 可用 | 表单 | 碎片想法零摩擦入库，可写入收集箱或当前笔记 |
+| 更新仓库 README | 可用 | 一键 | 用「Markdown 列表 + 双链」重建根目录索引 |
+| 生成目录 MOC | 可用 | 一键 | 为每个文件夹生成 `_MOC.md`，父链子串成导航树 |
+| 章节编号规范化 | 可用 | 表单 | 「第1章」→「第01章」，修正排序错乱 |
+| 幽灵附件 | 可用 | 表单 | 找出没有任何笔记引用的图片、PDF 等，只看不动 |
 
-Quick starting guide for new plugin devs:
+建议的首次使用顺序：先跑 **生成目录 MOC** 建好导航层，再跑 **更新仓库 README**——否则 README 里的文件夹链接会暂时是断链（点一下即可创建）。
 
-- Check if [someone already developed a plugin for what you want](https://obsidian.md/plugins)! There might be an existing plugin similar enough that you can partner up with.
-- Make a copy of this repo as a template with the "Use this template" button (login to GitHub if you don't see it).
-- Clone your repo to a local development folder. For convenience, you can place this folder in your `.obsidian/plugins/your-plugin-name` folder.
-- Install NodeJS, then run `npm i` in the command line under your repo folder.
-- Run `npm run dev` to compile your plugin from `src/main.ts` to `main.js`.
-- Make changes to `src/main.ts` (or create new `.ts` files). Those changes should be automatically compiled into `main.js`.
-- Reload Obsidian to load the new version of your plugin.
-- Enable plugin in settings window.
-- For updates to the Obsidian API run `npm update` in the command line under your repo folder.
+### 回看提醒
 
-## Releasing new releases
+按艾宾浩斯间隔安排复习，**只读仓库、只写自己的进度文件，不改动任何笔记**。
 
-- Update your `manifest.json` with your new version number, such as `1.0.1`, and the minimum Obsidian version required for your latest release.
-- Update your `versions.json` file with `"new-plugin-version": "minimum-obsidian-version"` so older versions of Obsidian can download an older version of your plugin that's compatible.
-- Create new GitHub release using your new version number as the "Tag version". Use the exact version number, don't include a prefix `v`. See here for an example: https://github.com/obsidianmd/obsidian-sample-plugin/releases
-- Upload the files `manifest.json`, `main.js`, `styles.css` as binary attachments. Note: The manifest.json file must be in two places, first the root path of your repository and also in the release.
-- Publish the release.
+加入清单后，间隔依次是 **1、1、2、3、8、15、60、90 天**，8 次回看走完正好是加入后的第 180 天：
 
-> You can simplify the version bump process by running `npm version patch`, `npm version minor` or `npm version major` after updating `minAppVersion` manually in `manifest.json`.
-> The command will bump version in `manifest.json` and `package.json`, and add the entry for the new version to `versions.json`
+| 第几次 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 本次间隔 | 1d | 1d | 2d | 3d | 8d | 15d | 60d | 90d |
+| 累计天数 | d1 | d2 | d4 | d7 | d15 | d30 | d90 | d180 |
 
-## Adding your plugin to the community plugin list
+- **下次日期一律以「实际回看日 + 间隔」计算。** 逾期回看会把后面的安排自然顺延，不会攒出一堆过期任务。
+- **未到期的笔记不出现在待回看列表里**，所以不存在「提前回看怎么算」的问题。
+- 走到第 8 次（d180）时，每次回看都要在 **继续 180 天** 与 **毕业** 之间选一次：选继续就进入常态循环（每 180 天一次），每次都能再选；选毕业则不再安排。
+- 点笔记名打开笔记，点「已回看」推进——**看和推进是两个动作**，读的时候不会被绑住。
+- 折叠区里可以查看全部已加入的笔记、暂停、恢复、重新开始、移除。
 
-- Check the [plugin guidelines](https://docs.obsidian.md/Plugins/Releasing/Plugin+guidelines).
-- Publish an initial version.
-- Make sure you have a `README.md` file in the root of your repo.
-- Make a pull request at https://github.com/obsidianmd/obsidian-releases to add your plugin.
+进度文件在仓库内的 `.masterpiece/review.json`，另有一份写入前的备份 `.masterpiece/review.bak.json`。选择放在仓库里而不是插件目录，是因为根 `.gitignore` 排除了整个 `.obsidian/plugins/masterpiece-tools`，放插件目录不会跟着 git 走。文件里的 `intervals` 和 `ongoingInterval` 可以直接改，改完立即生效。
 
-## How to use
+**对你文件的零改动保证：**
 
-- Clone this repo.
-- Make sure your NodeJS is at least v18 (`node --version`).
-- `npm i` to install dependencies.
-- `npm run dev` to start compilation in watch mode.
+| 场景 | 行为 |
+| --- | --- |
+| 正常回看 | 只写 `.masterpiece/review.json`，不碰任何笔记 |
+| 笔记改文件名 / 移动位置 | 监听 `rename` 事件，同步搬动记录，进度不丢 |
+| 笔记被删除 | 标记为「失联」并保留记录，**绝不自动删**；文件回来即自动恢复 |
+| 进度文件损坏 | 自动从备份恢复，并在卡片上提示 |
 
-## Manually installing the plugin
+已知限制：**插件没运行时**改文件名，无法自动识别（只能按同名匹配到「移动位置」的情况）。此时记录会标记失联，把文件名改回去即可自动恢复，或在折叠区里「重新开始」。
 
-- Copy over `main.js`, `styles.css`, `manifest.json` to your vault `VaultFolder/.obsidian/plugins/your-plugin-id/`.
+### 快速捕获
 
-## Improve code quality with eslint
+侧边栏里的输入框，写点什么就能立刻存进仓库，不用离开当前笔记去新建文件、找文件夹、起名字。
 
-- [ESLint](https://eslint.org/) is a tool that analyzes your code to quickly find problems. You can run ESLint against your plugin to find common bugs and ways to improve your code.
-- This project already has eslint preconfigured, you can invoke a check by running`npm run lint`
-- Together with a custom eslint [plugin](https://github.com/obsidianmd/eslint-plugin) for Obsidan specific code guidelines.
-- A GitHub action is preconfigured to automatically lint every commit on all branches.
+- 落点可选 **收集箱**（默认 `收集箱.md`，不存在时自动创建）或 **当前打开的笔记**。
+- 输入多行会拆成多条列表项，方便之后逐条整理。
+- 默认给每条加上 `HH:mm` 时间戳，可在设置里关掉。
+- `Ctrl / Cmd + Enter` 提交，提交后自动清空并保持焦点，可以连着记好几条。
+- 捕捉到的标签照常生效：输入 `#待复习 死锁的四个必要条件`，`#待复习` 就是 Obsidian 标签。
 
-## Funding URL
+### 更新仓库 README
 
-You can include funding URLs where people who use your plugin can financially support it.
+一键把仓库的完整文件树写入 `README.md`：
 
-The simple way is to set the `fundingUrl` field to your link in your `manifest.json` file:
+```markdown
+- 📁 [[编程学习/_MOC|编程学习]]
+	- 📁 [[编程学习/Python/_MOC|Python]]
+		- [[Python 之禅]]
+- 📁 [[计算机网络/_MOC|计算机网络]]
+```
 
-```json
+- **文件夹链向自己的 MOC**，文件用双链（`[[笔记名]]`），链路取仓库内最短唯一路径。
+- 保留空文件夹，索引能真实反映仓库骨架。
+- 自动跳过 Obsidian 配置目录、以 `.` 开头的隐藏目录、索引文件自身，以及所有 MOC 文件（已由文件夹链接代表）。
+- 文档头部带有自动生成的提示块与「最后更新」时间、文件夹/文件计数。
+
+### 生成目录 MOC
+
+为仓库内每个文件夹（根目录除外）生成一份 `_MOC.md`，把散落的笔记串成一棵可导航的树：
+
+```markdown
+<!-- mp:auto:head -->
+# 操作系统
+<!-- /mp:auto:head -->
+
+<!-- mp:manual -->
+（这一块归你，插件不会改动。可以写复习顺序、重点、心得。）
+<!-- /mp:manual -->
+
+<!-- mp:auto:body -->
+## 子目录
+
+- [[操作系统/题库/_MOC|题库]]
+
+## 笔记
+
+- [[第1章 概述]]
+- [[第2章 进程管理]]
+<!-- /mp:auto:body -->
+```
+
+**手动区与自动区**：HTML 注释标记把文件切成三块，重跑时只重写 `mp:auto:head` 和 `mp:auto:body` 两个自动区，中间的手动区连同你写的所有内容一个字符都不动。
+
+注释标记在阅读视图里不可见，在源码模式下清晰可见；不影响双链、图谱与搜索。
+
+**安全原则：标记即所有权。**
+
+| 情况 | 行为 |
+| --- | --- |
+| 两个自动区标记齐全 | 只重写自动区，手动区原样保留 |
+| 完全没有标记 | 视为你自己写的笔记，跳过不碰 |
+| 开始标记在、结束标记丢了 | 拒绝写入并上报，绝不猜测意图 |
+
+### 章节编号规范化
+
+把 `第1章`、`第2章`、`第10章` 补零成 `第01章`、`第02章`、`第10章`，让文件树按章节顺序排列，而不是被字典序挤成 `第10章` 排在 `第2章` 前面。
+
+- 支持 **章 / 节 / 讲 / 篇 / 课 / 单元** 等前缀，`第 3 章` 这类带空格写法也会被规整。
+- 补零位数按库内最大章号自动决定（够两位就两位，超过 99 自动补到三位）。
+- 改名走 Obsidian 的 `FileManager.renameFile`，**全库中指向这些笔记的双链会同步更新**，不会产生断链。改错了改回原名即可。
+
+**必须先扫描再应用**，卡片不会自动改任何东西：
+
+1. 点 **扫描** → 列出完整的改名方案（`第1章 概述.md → 第01章 概述.md`）。
+2. 确认无误后点 **应用 N 项改名**。
+
+发现以下情况会跳过并在预览里标出，不会硬改名：
+
+- 目标名称已被别的文件占用
+- 多篇笔记改名后会撞到同一个名字
+
+### 幽灵附件
+
+扫描整个仓库，找出**没有被任何文件引用过**的图片、PDF 等附件，按体积从大到小排列。
+
+- 附件 = 所有非 Markdown 文件（`.canvas` 除外，它是可被引用的笔记类型）。
+- 「被引用」同时看两条来源互为兜底：Obsidian 的链接图谱（`resolvedLinks`，含嵌入），以及每个笔记的 `links` / `embeds` 逐个解析。
+- 自动跳过 `.obsidian`、`.masterpiece` 等隐藏目录，以及设置里排除的文件夹。
+- 结果直接显示在卡片里，点文件名可以打开它确认是不是真的没用上。
+
+**只做检查，不提供删除。** 删文件是不可逆操作，不该放在侧边栏里误触。确认无用后请自行清理。
+
+> 说明：如果某个附件只被 Canvas 引用、而 Obsidian 没有为它建立链接索引，可能会被误报。因为这里只看不删，误报的代价只是列表里多一行。
+
+## 命令
+
+- **打开工作台** — 在右侧边栏打开工作台面板。
+- **更新仓库 README** — 跳过界面直接重建索引。
+- **生成目录 MOC** — 跳过界面直接生成文件夹索引。
+
+两者共用同一套执行流程，结果都会记录到对应卡片上（含时间与统计）。快速捕获、章节编号、幽灵附件需要表单交互，只在工作台内提供。
+
+## 设置
+
+在 **设置 → Masterpiece Tools** 中可配置：
+
+- **输出路径** — README 相对仓库根目录的路径，默认 `README.md`，支持子目录如 `索引/README.md`。
+- **索引标题** — 生成文档的一级标题。
+- **MOC 文件名** — 每个文件夹内的索引笔记名，默认 `_MOC`（下划线开头会排在最前）。
+- **排除的文件夹** — 一行一个，按路径前缀匹配。
+- **包含非 Markdown 附件** — 开启后图片、PDF 等也会进入 README 索引（MOC 始终只索引笔记）。
+- **文件夹图标** — 是否在文件夹名前加 📁。
+- **生成后打开 README** — 完成后在新标签页打开索引。
+- **收集箱路径** — 快速捕获默认写入的笔记，默认 `收集箱.md`。
+- **加时间戳** — 每条捕获内容前是否加 `HH:mm`。
+
+## 开发
+
+```bash
+npm install     # 安装依赖
+npm run dev     # 监听编译
+npm run build   # 类型检查 + 生产构建
+npm run lint    # ESLint（含 Obsidian 规则）
+```
+
+源码结构：
+
+```
+src/
+  main.ts                 # 插件生命周期、命令注册、卡片运行入口
+  settings.ts             # 设置结构与设置面板
+  constants.ts            # MOC 文件名、块标记等共享常量
+  features/               # 纯逻辑，不碰 DOM
+    vault-tree.ts         # 共享的仓库树构建、排除规则、双链生成
+    readme.ts             # README 渲染与写入
+    moc.ts                # MOC 生成与标记安全的写入
+    capture.ts            # 快速捕获的落点解析与写入
+    chapter-numbering.ts  # 章节编号扫描、冲突检测与改名
+    review.ts             # 回看清单：调度公式、进度读写、与仓库对齐
+    attachments.ts        # 幽灵附件：引用关系收集与未被引用附件扫描
+  workbench/
+    card-types.ts         # 卡片类型定义
+    cards.ts              # 卡片注册表
+    view.ts               # 侧边栏视图、搜索栏与卡片渲染
+    panels/               # 需要表单的卡片界面
+      capture-panel.ts
+      chapter-panel.ts
+      review-panel.ts
+      attachment-panel.ts
+```
+
+### 新增一个功能卡片
+
+在 `src/workbench/cards.ts` 的 `WORKBENCH_CARDS` 里追加一项即可，视图层无需改动。
+
+**一键式功能**填 `run`，点击整张卡片执行：
+
+```ts
 {
-	"fundingUrl": "https://buymeacoffee.com"
+	id: 'my-feature',
+	title: '我的功能',
+	description: '一句话说明',
+	icon: 'sparkles',
+	available: true,
+	keywords: ['搜索用的同义词'],
+	async run(plugin) {
+		return { ok: true, message: '完成' };
+	},
 }
 ```
 
-If you have multiple URLs, you can also do:
+**需要输入框或选择器**的功能填 `render`，卡片会自带表单，状态行与运行记录依然由框架管理：
 
-```json
+```ts
 {
-	"fundingUrl": {
-		"Buy Me a Coffee": "https://buymeacoffee.com",
-		"GitHub Sponsor": "https://github.com/sponsors",
-		"Patreon": "https://www.patreon.com/"
-	}
+	id: 'my-form-feature',
+	// ...
+	render(container, actions) {
+		const input = container.createEl('input');
+		const button = container.createEl('button', { text: '执行' });
+		button.onclick = () => {
+			void actions.run(async () => {
+				// actions.run 会自动处理「记录结果 + 弹提示」
+				return { ok: true, message: `处理了 ${input.value}` };
+			});
+		};
+	},
 }
 ```
 
-## API Documentation
+## 许可证
 
-See https://docs.obsidian.md
+0-BSD
