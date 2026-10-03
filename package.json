@@ -1,7 +1,7 @@
 {
-	"name": "obsidian-sample-plugin",
-	"version": "1.0.0",
-	"description": "This is a sample plugin for Obsidian (https://obsidian.md)",
+	"name": "obsidian-masterpiece-tools",
+	"version": "0.1.0",
+	"description": "Obsidian 仓库工作台：侧边栏卡片式一键工具集",
 	"main": "main.js",
 	"type": "module",
 	"scripts": {

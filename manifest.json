@@ -1,11 +1,9 @@
 {
-	"id": "sample-plugin",
-	"name": "Sample Plugin",
-	"version": "1.0.0",
-	"minAppVersion": "1.0.0",
-	"description": "Demonstrates some of the capabilities of the Obsidian API.",
-	"author": "Obsidian",
-	"authorUrl": "https://obsidian.md",
-	"fundingUrl": "https://obsidian.md/pricing",
+	"id": "masterpiece-tools",
+	"name": "Masterpiece Tools",
+	"version": "0.1.0",
+	"minAppVersion": "1.7.2",
+	"description": "仓库工作台：以侧边栏卡片的形式承载各种一键工具，首个功能是重建仓库根目录的 README 文件树索引。",
+	"author": "KAR1SEVEN",
 	"isDesktopOnly": false
 }
